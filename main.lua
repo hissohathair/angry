@@ -24,7 +24,7 @@
 
 require 'src/Dependencies'
 
-DEBUG_MODE = true
+DEBUG_MODE = false
 
 function love.load()
     math.randomseed(os.time())
@@ -86,6 +86,14 @@ function love.mouse.wasReleased(key)
 end
 
 function love.update(dt)
+    -- For taking screenshots for doco
+    if DEBUG_MODE and love.keyboard.wasPressed('s') then
+        local filename = "Angry50_" .. os.time() .. ".png"
+        love.graphics.captureScreenshot(filename)
+        savedir = love.filesystem.getSaveDirectory()
+        print_d("Saved screenshot to '%s/%s'", savedir, filename)
+    end
+
     if not paused then
         gStateMachine:update(dt)
 

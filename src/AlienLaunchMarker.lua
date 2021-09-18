@@ -77,19 +77,22 @@ function AlienLaunchMarker:update(dt)
         -- self.canSplit gets updated by Level:update() just before this function
         -- is called
         if love.keyboard.wasPressed('space') and self.canSplit and #self.aliens == 1 then
-            print_d("Splitting player's Alien")
 
+            gSounds['powerup']:play()
             local orig = self.aliens[1]
 
-            -- spawning 2 new aliens at same location as original
+            -- Spawning 2 new aliens at same location as original. Slightly
+            -- offset for above/below -- Box2D will reposition so that the 
+            -- aliens are not colliding
+
             local x, y = orig.body:getPosition()
-            local topAlien = Alien(self.world, 'round', x, y, 'Player')
-            local lowAlien = Alien(self.world, 'round', x, y, 'Player')
+            local topAlien = Alien(self.world, 'round', x, y - 8, 'Player')
+            local lowAlien = Alien(self.world, 'round', x, y + 8, 'Player')
 
             -- adjust top/low Aliens trajectories
             local dx, dy = orig.body:getLinearVelocity()
-            topAlien.body:setLinearVelocity(dx, dy + 30)
-            lowAlien.body:setLinearVelocity(dx, dy - 30)
+            topAlien.body:setLinearVelocity(dx - 30, dy + 30)
+            lowAlien.body:setLinearVelocity(dx + 30, dy - 30)
 
             -- make the new Aliens bounce the same
             topAlien.body:setAngularDamping(PLAYER_ANGULAR_DAMPING)
