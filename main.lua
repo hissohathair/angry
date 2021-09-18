@@ -24,6 +24,8 @@
 
 require 'src/Dependencies'
 
+DEBUG_MODE = true
+
 function love.load()
     math.randomseed(os.time())
     love.graphics.setDefaultFilter('nearest', 'nearest')

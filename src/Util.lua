@@ -16,3 +16,9 @@ function GenerateQuads(atlas, tilewidth, tileheight)
 
     return spritesheet
 end
+
+function print_d(...)
+    if DEBUG_MODE then
+        print(string.format(...))
+    end
+end

@@ -25,9 +25,46 @@ function AlienLaunchMarker:init(world)
     -- whether we launched the alien and should stop rendering the preview
     self.launched = false
 
-    -- our alien we will eventually spawn
-    self.alien = nil
+    -- our alien(s) we will eventually spawn
+    self.aliens = { }
 end
+
+
+--[[
+    Returns true if all aliens launched by player have either gone out of bounds
+    or have almost stopped moving. When this function returns true, 
+    Level is expected to reset() then re-initialise the AlienLaunchMarker.
+]]
+function AlienLaunchMarker:movementStopped()
+    -- count how many aliens are out of bounds or stopped
+    local numAliensStopped = 0
+
+    -- check each alien we may have launched
+    for k, alien in pairs(self.aliens) do
+        local xPos, yPos = alien.body:getPosition()
+        local xVel, yVel = alien.body:getLinearVelocity()
+            
+        -- if we fired our alien to the left or it's almost done rolling, respawn
+        if xPos < 0 or (math.abs(xVel) + math.abs(yVel) < 1.5) then
+            numAliensStopped = numAliensStopped + 1
+        end
+    end
+
+    -- if all aliens stopped return true
+    return #self.aliens == numAliensStopped
+end
+
+
+--[[
+    Call before disposing of the AlienLaunchMaker, to clean up alien objects
+    from the world.
+]]
+function AlienLaunchMarker:reset()
+    for k, alien in pairs(self.aliens) do
+        alien.body:destroy()
+    end
+end
+
 
 function AlienLaunchMarker:update(dt)
     
@@ -46,14 +83,17 @@ function AlienLaunchMarker:update(dt)
             self.launched = true
 
             -- spawn new alien in the world, passing in user data of player
-            self.alien = Alien(self.world, 'round', self.shiftedX, self.shiftedY, 'Player')
+            local alien = Alien(self.world, 'round', self.shiftedX, self.shiftedY, 'Player')
 
             -- apply the difference between current X,Y and base X,Y as launch vector impulse
-            self.alien.body:setLinearVelocity((self.baseX - self.shiftedX) * 10, (self.baseY - self.shiftedY) * 10)
+            alien.body:setLinearVelocity((self.baseX - self.shiftedX) * 10, (self.baseY - self.shiftedY) * 10)
 
             -- make the alien pretty bouncy
-            self.alien.fixture:setRestitution(0.4)
-            self.alien.body:setAngularDamping(1)
+            alien.fixture:setRestitution(0.4)
+            alien.body:setAngularDamping(1)
+
+            -- insert this alien into our list
+            table.insert(self.aliens, alien)
 
             -- we're no longer aiming
             self.aiming = false
@@ -103,6 +143,8 @@ function AlienLaunchMarker:render()
         
         love.graphics.setColor(1, 1, 1, 1)
     else
-        self.alien:render()
+        for k, alien in pairs(self.aliens) do
+            alien:render()
+        end
     end
 end
