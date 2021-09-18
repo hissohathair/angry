@@ -140,7 +140,15 @@ function Level:init()
     self.background = Background()
 end
 
+
+--[[
+    Called by PlayState:update. Updates Box2D world, and calls 
+    AlienLaunchMarker:update()
+]]
 function Level:update(dt)
+
+    -- let the launch marker know if it's still possible to split player's aliens
+    self.launchMarker.canSplit = not self.playerCollided
     
     -- update launch marker, which shows trajectory
     self.launchMarker:update(dt)
@@ -183,6 +191,7 @@ function Level:update(dt)
     if self.launchMarker.launched and self.launchMarker:movementStopped() then
         self.launchMarker:reset()
         self.launchMarker = AlienLaunchMarker(self.world)
+        self.playerCollided = false
 
         -- re-initialize level if we have no more aliens
         if #self.aliens == 0 then

@@ -19,6 +19,6 @@ end
 
 function print_d(...)
     if DEBUG_MODE then
-        print(string.format(...))
+        print("[DEBUG] " .. string.format(...))
     end
 end

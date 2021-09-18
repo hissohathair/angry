@@ -25,6 +25,9 @@ function AlienLaunchMarker:init(world)
     -- whether we launched the alien and should stop rendering the preview
     self.launched = false
 
+    -- wether we still have a chance to split aliens
+    self.canSplit = true
+
     -- our alien(s) we will eventually spawn
     self.aliens = { }
 end
@@ -68,9 +71,39 @@ end
 
 function AlienLaunchMarker:update(dt)
     
-    -- perform everything here as long as we haven't launched yet
-    if not self.launched then
+    -- if launched, there's a chance to "split" the player's alien
+    if self.launched then
+        -- can only split if we haven't done so already, and player has not collided.
+        -- self.canSplit gets updated by Level:update() just before this function
+        -- is called
+        if love.keyboard.wasPressed('space') and self.canSplit and #self.aliens == 1 then
+            print_d("Splitting player's Alien")
 
+            local orig = self.aliens[1]
+
+            -- spawning 2 new aliens at same location as original
+            local x, y = orig.body:getPosition()
+            local topAlien = Alien(self.world, 'round', x, y, 'Player')
+            local lowAlien = Alien(self.world, 'round', x, y, 'Player')
+
+            -- adjust top/low Aliens trajectories
+            local dx, dy = orig.body:getLinearVelocity()
+            topAlien.body:setLinearVelocity(dx, dy + 30)
+            lowAlien.body:setLinearVelocity(dx, dy - 30)
+
+            -- make the new Aliens bounce the same
+            topAlien.body:setAngularDamping(PLAYER_ANGULAR_DAMPING)
+            lowAlien.body:setAngularDamping(PLAYER_ANGULAR_DAMPING)
+            topAlien.fixture:setRestitution(PLAYER_RESTITUTION)
+            lowAlien.fixture:setRestitution(PLAYER_RESTITUTION)
+
+            -- add to launch table
+            table.insert(self.aliens, topAlien)
+            table.insert(self.aliens, lowAlien)
+        end
+
+    -- perform everything here as long as we haven't launched yet
+    else
         -- grab mouse coordinates
         local x, y = push:toGame(love.mouse.getPosition())
         
@@ -89,8 +122,8 @@ function AlienLaunchMarker:update(dt)
             alien.body:setLinearVelocity((self.baseX - self.shiftedX) * 10, (self.baseY - self.shiftedY) * 10)
 
             -- make the alien pretty bouncy
-            alien.fixture:setRestitution(0.4)
-            alien.body:setAngularDamping(1)
+            alien.fixture:setRestitution(PLAYER_RESTITUTION)
+            alien.body:setAngularDamping(PLAYER_ANGULAR_DAMPING)
 
             -- insert this alien into our list
             table.insert(self.aliens, alien)
